@@ -877,7 +877,7 @@ Return EXACTLY {batch_size} turns as a JSON array (no markdown):
             resp = requests.post("https://gen.pollinations.ai/v1/chat/completions", json={
                 "model": model_name,
                 "messages": [
-                    {"role": "system", "content": "You write natural A2-level Turkish podcast scripts with VERY clear punctuation. Every sentence must have at least 2 commas for natural TTS pauses. Emre and Elif strictly alternate. Highlight 1 key target word per turn in double asterisks. No filler sounds. CRITICAL: the target field must contain ONLY Turkish (Latin letters). The translit field must repeat the target text exactly. English belongs only in the english field. Output single compact JSON array without unescaped newlines inside strings."},
+                    {"role": "system", "content": "You write natural A2-level Turkish podcast scripts with VERY clear punctuation. Every sentence must have at least 2 commas for natural TTS pauses. Emre and Elif strictly alternate. Highlight 1 key target word per turn in double asterisks. No filler sounds. CRITICAL: the target field must contain ONLY Turkish (Latin letters). Each host addresses the OTHER host by name: Elif greets Emre and Emre greets Elif. No host ever addresses themselves by their own name; the only exception is introducing yourself. The translit field must repeat the target text exactly. English belongs only in the english field. Output single compact JSON array without unescaped newlines inside strings."},
                     {"role": "user", "content": prompt}
                 ],
                 "temperature": 0.8
@@ -948,8 +948,8 @@ def _fallback_script(topic_tr, topic_en, target=150):
     topic_translit = to_accurate_translit(topic_tr)
     phases = [
         [
-            ('Host2', 'Elif bugün **hava** güzel.', 'Elif today the weather is nice.'),
-            ('Host1', 'Emre, bugün de **okul** var mı?', 'Emre, is there school today too?'),
+            ('Host2', 'Emre bugün **hava** güzel.', 'Emre, today the weather is nice.'),
+            ('Host1', 'Elif, bugün de **okul** var mı?', 'Elif, is there school today too?'),
             ('Host2', 'Evet, sabah **erkenden** gidiyoruz.', 'Yes, we go early in the morning.'),
             ('Host1', 'Ben **kahvaltı** yapıyorum, sonra çıkıyorum.', 'I am having breakfast, then I leave.'),
             ('Host2', 'Kahvaltıda **süt** içiyorum ve ekmek yiyorum.', 'For breakfast I drink milk and eat bread.'),
@@ -1033,14 +1033,14 @@ def generate_script():
     # Short 2-line intro: FEMALE (Host2) first, then MALE (Host1)
     topic_translit = to_accurate_translit(topic_tr)
     all_turns[0]["speaker"] = "Host2"
-    all_turns[0]["target"] = 'Elif bugün **hava** güzel.'
-    all_turns[0]["translit"] = to_accurate_translit('Elif bugün **hava** güzel.')
-    all_turns[0]["english"] = 'Elif today the weather is nice.'
+    all_turns[0]["target"] = 'Emre bugün **hava** güzel.'
+    all_turns[0]["translit"] = to_accurate_translit('Emre bugün **hava** güzel.')
+    all_turns[0]["english"] = 'Emre, today the weather is nice.'
     if len(all_turns) > 1:
         all_turns[1]["speaker"] = "Host1"
-        all_turns[1]["target"] = 'Emre, bugün de **okul** var mı?'
-        all_turns[1]["translit"] = to_accurate_translit('Emre, bugün de **okul** var mı?')
-        all_turns[1]["english"] = 'Emre, is there school today too?'
+        all_turns[1]["target"] = 'Elif, bugün de **okul** var mı?'
+        all_turns[1]["translit"] = to_accurate_translit('Elif, bugün de **okul** var mı?')
+        all_turns[1]["english"] = 'Elif, is there school today too?'
     # Final guarantee across ALL turns: ensure valid Latin romaji exists for every single turn
     for turn in all_turns:
         ja = turn.get("target", "")

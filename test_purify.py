@@ -31,16 +31,16 @@ out = pg._purify_target('Günaydın 你好')
 check("leak-plain", out, (), ('你好',))
 
 # 2. Leak inside highlight markers is removed (empty markers go too).
-out = pg._purify_target('Elif bugün **hava** güzel. 你好')
+out = pg._purify_target('Emre bugün **hava** güzel. 你好')
 check("leak-in-highlight", out, (), ('你好', '****'))
 
 # 3. The brand name survives purification untouched.
-brand = 'Velocity Turkish. Elif bugün **hava** güzel.'
+brand = 'Velocity Turkish. Emre bugün **hava** güzel.'
 if pg._purify_target(brand) != brand:
     FAILURES.append("brand: damaged -> %r" % pg._purify_target(brand))
 
 # 4. Clean input passes through unchanged.
-clean = 'Elif bugün **hava** güzel.'
+clean = 'Emre bugün **hava** güzel.'
 if pg._purify_target(clean) != clean:
     FAILURES.append("clean-passthrough: changed -> %r" % pg._purify_target(clean))
 
@@ -54,7 +54,7 @@ tr2 = pg.to_accurate_translit(clean)
 if len(tr2) < 5:
     FAILURES.append('translit-empty: %r' % tr2)
 # 6. End-to-end fragment of the generate_script guarantee loop.
-turn = {"target": 'Elif bugün **hava** güzel.', "translit": ""}
+turn = {"target": 'Emre bugün **hava** güzel.', "translit": ""}
 trg = pg._purify_target(turn.get("target", ""))
 turn["target"] = trg
 check("guarantee-writeback", turn["target"], (), ('你好', '****'))
@@ -70,6 +70,24 @@ if not toks:
     FAILURES.append("karaoke: no tokens")
 elif "".join(toks).replace(" ", "") != (trg or clean).replace("**", "").replace(" ", ""):
     FAILURES.append("karaoke: rebuild mismatch %r" % toks)
+
+# 9. Fallback turns address the OTHER host, never self (except self-introduction).
+import json as _json
+import re as _re
+_fb = _json.loads((Path(__file__).resolve().parent.parent / "fleet_cache.json").read_text(encoding="utf-8"))["Turkish"]["fallback"]
+_addr_bad = []
+for _i, _t in enumerate(_fb):
+    _en = _t.get("english", "") or ""
+    _spk = _t.get("speaker", "")
+    _own = "Elif" if _spk == "Host2" else "Emre"
+    _other = "Emre" if _spk == "Host2" else "Elif"
+    _el = _en.lower()
+    if _re.search(r"%s" % _own.lower(), _el) and not _re.search(r"(i'm|i am|this is|my name is) %s" % _own.lower(), _el):
+        _addr_bad.append((_i, _en))
+    if _i < 2 and _other.lower() not in _el:
+        _addr_bad.append((_i, "intro-missing-other: " + _en))
+if _addr_bad:
+    FAILURES.append('addressing: %r' % (_addr_bad,))
 
 if FAILURES:
     print("FAIL %d" % len(FAILURES))
